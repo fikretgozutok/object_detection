@@ -1,5 +1,7 @@
 import cv2
 import numpy as np
+import pandas as pd
+import pygame
 
 class Tools():
     def __init__(self):
@@ -32,5 +34,23 @@ class Tools():
         return frame
 
     @staticmethod
-    def getAudioFileByLabel():
-        pass
+    def getAudioFileByLabel(label: str, data: pd.DataFrame) -> str | None:
+        
+        filter = data[data['class_list'] == label]
+
+        if len(filter) == 0:
+            return None
+        
+        result = filter.iloc[0]['file_path']
+
+        result = tuple([result.strip('()')])[0]
+
+        return result[1 : -2]
+    
+    @staticmethod
+    def playAudio(audioFile: str, player: pygame.mixer) -> None:
+        player.music.load(audioFile)
+        player.music.play()
+
+        while player.music.get_busy():
+            pygame.time.Clock().tick(10)
