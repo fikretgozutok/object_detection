@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from tools import Tools
+from detection import Detection
 
 class Detector():
     def __init__(self, cfgFile: str, weightsFile: str):
@@ -12,13 +13,15 @@ class Detector():
 
         self.setModel()
 
-    def readFrame(self, frame: np.ndarray):
-        self.frame = frame
+    def readFrame(self, frame: np.ndarray) -> np.ndarray:
+        self._frame = frame
         
-        self.frameWidth = self.frame.shape[1]
-        self.frameHeight = self.frame.shape[0]
+        self.frameWidth = self._frame.shape[1]
+        self.frameHeight = self._frame.shape[0]
 
-        self.frameBlob = cv2.dnn.blobFromImage(self.frame, 1/255, (416,416), swapRB=True, crop=False)
+        self.frameBlob = cv2.dnn.blobFromImage(self._frame, 1/255, (416,416), swapRB=True, crop=False)
+
+        return self._frame
 
     def setModel(self):
         self.model = cv2.dnn.readNetFromDarknet(self.cfgFile, self.weightsFile)
@@ -60,6 +63,8 @@ class Detector():
 
         maxIdList = cv2.dnn.NMSBoxes(boxList, confidenceList, 0.5, 0.4)
 
+        detectionList = list(Detection)
+
         for maxId in maxIdList:
             maxClassId = maxId
             box = boxList[maxClassId]
@@ -76,14 +81,8 @@ class Detector():
             endX = startX + boxWidth
             endY = startY + boxHeight
 
-
-            return (
-                label,
-                confidence,
-                self.boxColor,
-                startX,
-                startY,
-                endX,
-                endY
+            detectionList.append(
+                Detection(label,confidence, self.boxColor, startX, startY, endX, endY)
             )
 
+        return detectionList
